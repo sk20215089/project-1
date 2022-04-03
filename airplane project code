@@ -1,0 +1,738 @@
+import PIL
+import smtplib
+import mysql.connector as mycon
+import pickle
+from tkinter import *
+import json
+import matplotlib.pyplot as plt
+from random import *
+import getpass
+from email.mime.multipart import MIMEMultipart 
+from email.mime.text import MIMEText 
+from email.mime.base import MIMEBase 
+from email import encoders
+import pyautogui
+con=mycon.connect(host="localhost",user="root",passwd="3110",database="airlines")
+cur=con.cursor()
+cur.execute("create table if not exists login_customers ( username varchar(60) not null primary key, password varchar(60) not null,id varchar(20),flyer int)")
+cur.execute("create table if not exists login_staff ( username varchar(60) not null primary key, password varchar(60) not null)")
+def airplane():
+    f=open("notes.dat","wb")
+    d={1:{"route":"New Delhi to London","price":"Rs 10000","date":"15 July 2020","departure":"14:30","status":"ON TIME"},
+       2:{"route":"New Delhi to Dubai","price":"Rs 8900","date":"14 July 2020","departure":"17:00","status":"ON TIME"},
+       3:{"route":"New Delhi to New York","price":"Rs 12600","date":"19 July 2020","departure":"19:45","status":"DELAYED"},
+       4:{"route":"New Delhi to Kolkata","price":"Rs 8000","date":"16 July 2020","departure":"18:45","status":"ON TIME"},
+       5:{"route":"New Delhi to Kolkata","price":"Rs 9300","date":"13 July 2020","departure":"00:30","status":"DELAYED"}}
+    pickle.dump(d,f)
+    f.close()
+    l=open("student.dat","wb")
+    m={1:{"route":"Los Angeles to New Delhi","date":"15 July 2020","arriving":"11\:30","status":"ON TIME"},
+       2:{"route":"Las Vegas to New Delhi","date":"18 July 2020","arriving":"09\:50","status":"delayed"},
+       3:{"route":"Sydney to New Delhi","date":"14 July 2020","arriving":"04\:15","status":"ON TIME"},
+       4:{"route":"Norway to New Delhi","date":"18 July 2020","arriving":"00\:30","status":"ON TIME"},
+       5:{"route":"Goa to New Delhi","date":"15 July 2020","arriving":"12\:30","status":"ON TIME"}}
+    pickle.dump(m,l)
+    l.close()
+def dashboard_customers():
+
+    while(True):
+        h=0
+        print("="*125)
+        print("\n1. Book/Check Flight Availability")
+        print("2. Check Current status of Booked Flight")
+        print("3. Check Flyer Miles Rewarded (If a Member of Frequent Flyer Programme)")
+        print("4. Check out our most popular destinations voted by people")
+        print("5. Change Password")
+        print("6. See Flight history")
+        print("0. Logout\n")
+        choice = int(input("Enter Choice: "))
+        if choice==1:
+            cur=con.cursor()
+            cur.execute("select flyer from login_customers where username='{}' and password='{}'".format(uname_test2,passw))
+            data2=cur.fetchall()
+            global flyer
+            for i in data2:
+                for j in i:
+                    flyer=j
+            cur=con.commit()
+            print("\nChoose the flight you want to book:\n")
+            g=open("notes.dat","rb")
+            w=pickle.load(g)
+            v=0
+            for i in w.keys():
+                v+=1
+            for i in range(1,v+1):
+                print(w[i]["route"],"Flight Number",i)
+            j=int(input("Enter Flight Number to be booked"))
+            print("\nDetails of the flight :")
+            print(json.dumps(w[j],indent=5))          
+            d=w[j]["price"][3:]
+            l1=int(d)
+            f=2.5/100*(l1)
+            f2=int(f)
+            flyer+=int(f)
+            x3=w[j]["price"]
+            b=str(input("Proceed to booking(Y/N)?: "))
+            if b.lower()=="n":
+                  print("\nYour ticket for this flight is not booked!\n")
+            elif b.lower()=="y":
+                y=input("Do you want to use your flyer miles wallet(Y/N)?: ")
+                if y.lower()=="y":
+                    cur=con.cursor()
+                    query="select flyer from login_customers where username='{}'".format(uname_test2)
+                    cur.execute(query)
+                    for j6 in cur:
+                        for k98 in j6:
+                            y=k98
+                    x3=str(l1-y)
+
+                    flyer-=y
+                    cur=con.cursor()
+                    cur.execute("update login_customers set flyer={} where id='{}' and 				        username='{}'".format(flyer,ID,uname_test2))
+                    con.commit()
+                elif y.lower()=="n":
+                    x3=w[j]["price"]
+                    print(x3)
+                    cur=con.cursor()
+                    cur.execute("update login_customers set flyer={} where id='{}' and 				        username='{}'".format(flyer,ID,uname_test2))
+                    con.commit()
+                else:
+                    print("\nInvalid Input, enter (Y/N)!\n")
+                window2=Tk()
+                window2.title("Invoice")
+                P1=Label(window2,text="Invoice",font=("Comic Sans MS",15),fg="black")
+                P1.grid(column=1,row=0)
+                P0=Label(window2,text="Username",font=("Comic Sans MS",10),fg="black")
+                P0.grid(column=0,row=1)
+                m=uname_test2
+                Po=Label(window2,text=m,font=("Comic Sans MS",10),fg="black")
+                Po.grid(column=1,row=1)
+                P2=Label(window2,text="Destination",font=("Comic Sans MS",10),fg="black")
+                P2.grid(column=0,row=2)
+                x2=w[j]["route"]
+                a1=Label(window2,text=x2,font=("Comic Sans MS",10),fg="black")
+                a1.grid(column=1,row=2)
+                P3=Label(window2,text="Price",font=("Comic Sans MS",10),fg="black")
+                P3.grid(column=0,row=3)
+                a2=Label(window2,text=x3,font=("Comic Sans MS",10),fg="black")
+                a2.grid(column=1,row=3)
+                P3=Label(window2,text="Unique ID",font=("Comic Sans MS",10),fg="green")
+                P3.grid(column=0,row=4)
+                
+                a2=Label(window2,text=ID,font=("Comic Sans MS",10),fg="black")
+                a2.grid(column=1,row=4)
+                
+                P4=Label(window2,text="Time of Flight",font=("Comic Sans MS",10),fg="black")
+                P4.grid(column=0,row=5)
+                x4=w[j]["departure"]
+                a3=Label(window2,text=x4,font=("Comic Sans MS",10),fg="black")
+                a3.grid(column=1,row=5)
+                P5=Label(window2,text="date",font=("Comic Sans MS",10),fg="black")
+                P5.grid(column=0,row=6)
+                x5=w[j]["date"]
+                a4=Label(window2,text=x5,font=("Comic Sans MS",10),fg="black")
+                a4.grid(column=1,row=6)
+                n1=Label(window2,text="NOTE",font=("Comic Sans MS",15),fg="black")
+                n1.grid(column=1,row=8)
+                n2=Label(window2,text="Above Invoice has been sent to your registered email 		    
+	    address.",font=("Comic Sans MS",10),fg="black")
+                n2.grid(column=0,row=9)
+                n3=Label(window2,text="Please click on the link sent in the e-mail on the invoice to be 	    re-directed to the payments page..",font=("Comic Sans MS",10),fg="black")
+                n3.grid(column=0,row=10)
+                k="You have been awarded "+str(f2)+" flyer member points!"
+                n4=Label(window2,text=k,font=("Comic Sans MS",15),fg="red")
+                n4.grid(column=0,row=11)
+                n5=Label(window2,text="You can use them in your next Flight booking",font=("Comic 	    Sans MS",15),fg="black")
+                n5.grid(column=0,row=12)
+                n6=Label(window2,text="Please Open The Invoice Window in Full Screen Before 	  	    Clicking Exit..",font=("Comic Sans MS",10),fg="black")
+                n6.grid(column=0,row=13)
+                def quit():
+                    image = pyautogui.screenshot('sshot.png')
+                    fromaddr = "projectscorpion21@gmail.com"
+                    toaddr = uname_test2
+                    msg = MIMEMultipart()
+                    msg['From'] = fromaddr
+                    msg['To'] = toaddr
+                    msg['Subject'] = "Invoice for Flight Booking"
+                    body = "\nHey there Flyer!\n\nWe have received a transaction request from your 		        AeroChique Account. Attached with this communication is the invoice for the 		        same.\n\nIf you did not request this booking, please contact our support team as soon 	        as possible.\n\n\nCheers!\nThe Aerochique Team\n\nThis is a computer generated 	    	        message."
+                    msg.attach(MIMEText(body, 'plain'))
+                    filename = "Invoice.png"
+                    attachment = open(r"C:\Users\ajayb\Desktop\Python\PROJECT Airlines\sshot.png", 	        "rb")
+                    p = MIMEBase('application', 'octet-stream')
+                    p.set_payload((attachment).read())
+                    encoders.encode_base64(p)
+                    p.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+                    msg.attach(p)
+                    s = smtplib.SMTP('smtp.gmail.com', 587)
+                    s.starttls()
+                    s.login(fromaddr, "csprojectnewnew")
+                    text = msg.as_string()
+                    s.sendmail(fromaddr, toaddr, text)
+                    s.quit()
+                    window2.destroy()
+                a131=Button(window2,text="exit",fg='green',font=("arial bold",20),command=quit)
+                a131.grid(column=1,row=14)
+                window2.lift()
+                window2.attributes('-topmost',True)
+                window2.after_idle(window2.attributes,'-topmost',False)
+                window2.mainloop()
+                h90=open("history.dat","rb")
+                p90=pickle.load(h90)
+
+                h90.close()
+                f90=open("history.dat","wb")
+                for i in p90:
+                    if i[0]==uname_test2 and i[1]==passw and i[2]==ID:
+                        t=[x2,x5,x4,x3]
+                        i.append(t)
+                        break
+                else:
+                    t=[uname_test2,passw,ID,[x2,x5,x4,x3]]
+                    p90.append(t)
+                pickle.dump(p90,f90)
+                f90.close()
+                continue
+                
+            else:
+                print("\nInvalid Input!\n")
+            continue
+            
+                
+                  
+        if choice==5 :
+            uname=str(input("Enter username"))
+            current_pwd=getpass.getpass("Enter current password: ")
+            new_pwd=getpass.getpass("Enter new password: ")
+            new_pwd_confirm=getpass.getpass("Reenter new password: ")
+            cur=con.cursor()
+            cur.execute("select * from login_customers")
+            data=cur.fetchall()
+            data1=[]
+            for i in data:
+                data1+=[[i[0],i[1]]]
+            if [uname,current_pwd] in data1:
+                if new_pwd==new_pwd_confirm:
+                    cur.execute("update login_customers set password = '{}' where Username = 			        '{}'".format(new_pwd,uname))
+                    con.commit()
+                elif new_pwd != new_pwd_confirm:
+                    print("\nNew Password Fields don't match!\n")
+            else:
+                print("\nWrong Credentials Entered!\n")
+            
+        if choice==0:
+            print("="*125)
+            menu()
+            break
+        elif choice==2:
+            
+            f=open("notes.dat","rb")
+            try:
+                k=pickle.load(f)
+                v=0
+
+                for i in k.keys():
+                    v+=1
+                window=Tk()
+               
+                window.title("Flight Pattern")
+                P=Label(window,text="Departure",font=("Comic Sans MS",20),fg="black")
+                P.grid(column=0,row=0)
+                for i in range(1,v+1):
+                    a=Label(window,text="Route:",font=("Comic sans MS ",15),fg="black")
+                    a.grid(column=0,row=i)
+                    x1=k[i]["route"]
+                    a2=Label(window,text=x1,font=("Comic Sans MS",10),fg="red")
+                    a2.grid(column=1,row=i)
+                    a3=Label(window,text="Price",font=("Comic sans MS ",15),fg="black")
+                    a3.grid(column=3,row=i)
+                    x2=k[i]["price"]
+                    a4=Label(window,text=x2,font=("Comic Sans MS",10),fg="blue")
+                    a4.grid(column=4,row=i)
+                    a5=Label(window,text="Date",font=("Comic sans MS ",15),fg="black")
+                    a5.grid(column=5,row=i)
+                    x3=k[i]["date"]
+                    a6=Label(window,text=x3,font=("Comic Sans MS",10),fg="orange")
+                    a6.grid(column=6,row=i)
+                    a7=Label(window,text="Departure",font=("Comic sans MS ",15),fg="black")
+                    a7.grid(column=7,row=i)
+                    x4=k[i]["departure"]
+                    a8=Label(window,text=x4,font=("Comic Sans MS",10),fg="green")
+                    a8.grid(column=8,row=i)
+                    a9=Label(window,text="Status",font=("Comic sans MS ",15),fg="black")
+                    a9.grid(column=9,row=i)
+                    x5=k[i]["status"]
+                    a10=Label(window,text=x5,font=("Comic Sans MS",10),fg="purple")
+                    a10.grid(column=10,row=i)
+               
+            except EOFError:
+                    break
+            f343=open("student.dat","rb")
+            try:
+                k2=pickle.load(f343)
+                P1=Label(window,text="ARRIVAL",font=("Comic Sans MS",20),fg="black")
+                P1.grid(column=0,row=v+1)
+                v2=0
+                for i in k2.keys():
+                    v2+=1
+                
+                for i in range(1,v2+1):
+                    a11=Label(window,text="Route:",font=("Comic sans MS ",15),fg="black")
+                    a11.grid(column=0,row=i+v+2)
+                    x6=k2[i]["route"]
+                    a12=Label(window,text=x6,font=("Comic Sans MS",10),fg="red")
+                    a12.grid(column=1,row=i+v+2)
+
+                    a13=Label(window,text="Date",font=("Comic sans MS ",15),fg="black")
+                    a13.grid(column=3,row=i+v+2)
+                    x7=k2[i]["date"]
+                    a14=Label(window,text=x7,font=("Comic Sans MS",10),fg="orange")
+                    a14.grid(column=4,row=i+v+2)
+                    a15=Label(window,text="arriving",font=("Comic sans MS ",15),fg="black")
+                    a15.grid(column=5,row=i+v+2)
+                    x8=k2[i]["arriving"]
+                    a16=Label(window,text=x8,font=("Comic Sans MS",10),fg="green")
+                    a16.grid(column=6,row=i+v+2)
+                    a17=Label(window,text="status",font=("Comic sans MS ",15),fg="black")
+                    a17.grid(column=7,row=i+v+2)
+                    x9=k2[i]["status"]
+                    a18=Label(window,text=x9,font=("Comic Sans MS",10),fg="purple")
+                    a18.grid(column=8,row=i+v+2)
+            except EOFError:
+                    break
+            def getout():
+                        window.destroy()
+            a130=Button(window,text="exit",fg='green',font=("arial bold",20),command=getout)
+            a130.grid(column=4,row=15)
+            window.lift()
+            window.attributes('-topmost',True)
+            window.after_idle(window.attributes,'-topmost',False)
+            window.mainloop()
+            
+        if choice==3:
+           t3=input("Enter Username: ")
+           t4=input("Enter the Unique ID: ")
+           if t3==uname_test2 and t4==ID:
+               cur=con.cursor()
+               cur.execute("update login_customers set flyer={} where id='{}' and 	      	  	    	   username='{}'".format(flyer,ID,uname_test2))
+               con.commit()
+               cur=con.cursor()
+               cur.execute("select flyer from login_customers where id='{}' and 	  		 	   username='{}'".format(ID,uname_test2))
+               for i in cur:
+                   for x in i:
+                       print("\nYour Flyer Miles Points are ",x)
+           else:
+               print("\nInvalid Name or UID!\n")
+        if choice==4:
+            labels='DUBAI','PARIS','GOA','NEW YORK','LONDON','OTHERS'
+            votes=[1554,2304,432,1782,2982,302]
+            size=votes
+            colors=['orange','green','red','yellow','skyblue','pink']
+            explode=(0,0,0,0,0.1,0)
+	plt.pie(size,explode=explode,labels=labels,colors=colors,autopct='%1.1f%%',shadow=True,	startangle=30)
+
+
+            plt.show()
+            continue
+        if choice==6:
+            print("\n\nYour flight history is as follows: ")
+            g104=open("history.dat","rb")
+            l104=pickle.load(g104)
+            for i in l104:
+                if i[0]==uname_test2 and i[1]==passw and i[2]==ID:
+                    print("Username :",i[0])
+                    print("ID :",i[2])
+                    n=len(i)
+                    for l in range(3,n):
+                        k=i[l]
+                        print(l-2)
+                        print("Route:",k[0])
+                        print("Date:",k[1])
+                        print("Time:",k[2])
+                        print("Price:",k[3])
+                
+def dashboard_staff():
+    while(True):
+        h=0
+        print("\n1. Graph of Income vs Time")
+        print("2. Change Password")
+        print("3. Change departuring flights")
+        print("4. Change arriving flights ")
+        print("5. Remove/add/edit for existing departuring flight ")
+        print("6. Remove/add/edit for existing arriving flight ")
+        print("0. Logout\n")
+        choice = int(input("Enter Choice: "))
+        if choice==0:
+            print("="*125)
+            menu()
+            break
+        if choice==2 :
+            uname=str(input("Enter username: "))
+            current_pwd=getpass.getpass("Enter current password: ")
+            new_pwd=getpass.getpass("Enter new password: ")
+            new_pwd_confirm=getpass.getpass("Reenter new password: ")
+            cur=con.cursor()
+            cur.execute("select * from login_staff")
+            data=cur.fetchall()
+            if (uname,current_pwd) in data:
+                if new_pwd==new_pwd_confirm:
+                    cur.execute("update login_staff set password = '{}' where Username = 		   	        '{}'".format(new_pwd,uname))
+                    con.commit()
+                    print("\nPassword changed successfully!\n")
+                elif new_pwd != new_pwd_confirm:
+                    print("\nNew Password Fields don't match!\n")
+            else:
+
+                print("\nWrong Credentials Entered!\n")
+            print("="*125)
+        if choice==1:
+            year=[2014,2015,2016,2017,2018,2019]
+            income=[38.2,43.5,57.93,52.97,60,86.043]
+            plt.plot(year,income,color='red')
+            plt.xlabel('Year')
+            plt.ylabel('Income generated(in millions) per fiscal quarter')
+            plt.title('Comparative study of Income earned vs Time')
+            plt.show()
+            print("="*125)
+        if choice==6:
+            print("="*125)
+            print("1. Remove Existing Flight")
+            print("2. Add a New Flight")
+            print("3. Edit an Existing Flight")
+            print("0. Back")
+            l10=int(input("Enter your choice: "))
+            if l10==0:
+                continue
+            elif l10==1:
+                remove2()
+            elif l10==2:
+                adding2()
+            elif l10==3:
+                editing2()
+            else:
+                print("\nInvalid Input!\n")
+            print("="*125)
+        if choice==5:
+            print("="*125)
+            print("1. Remove Existing Flight")
+            print("2. Add a New Flight")
+            print("3. Edit an Existing Flight")
+            print("0. Back")
+            l09=int(input("Enter your choice: "))
+            if l09==0:
+                continue
+            elif l09==1:
+                remove()
+            elif l09==2:
+                adding()
+            elif l09==3:
+                editing()
+            else:
+                print("\nInvalid Input!\n")
+            print("="*125)
+        if choice==3:
+            print("="*125)
+            t=input("Are you sure you want to change the flights(Y/N)?: ")
+            if t.lower()=="y":
+
+                manual1()
+                print("="*125)
+            elif t.lower()=="n":
+                print("="*125)
+                continue
+            else:
+                print("Wrong Credentials!")
+                print("="*125)
+                continue
+            print("="*125)
+        if choice==4:
+            print("="*125)
+            t2=input("Are you sure you want to change the flights(Y/N)?: ")
+            if t2.lower()=="y":
+                manual2()
+                print("="*125)
+            elif t2.lower()=="n":
+                print("="*125)
+                continue
+            else:
+                print("\nWrong Credentials!\n")
+                print("="*125)
+                continue
+            print("="*125)
+        continue
+        
+
+
+                 
+def menu():
+    while(True):
+        print("="*125)
+        print("\nWelcome to AeroChique Airlines!")
+        print("\nPlease select from the following Options Available:")
+        print("1. Login to Customer Account")
+        print("2. Sign Up for new account")
+        print("3. Login for Staff")
+        print("4. Show Logo for AeroChique Airlines")
+        print("0. Exit\n")
+        choice=int(input("Enter Choice: "))
+        if choice==1:
+            uname=str(input("Enter Username: "))
+            pwd=getpass.getpass("Enter Password: ")
+            cur=con.cursor()
+            cur.execute("select username,password from login_customers")
+            data=cur.fetchall()
+            if (uname,pwd) in data:
+                print("\nYou have successfully logged in!\n")
+                global uname_test2
+                uname_test2=uname
+                cur=con.cursor()
+
+                cur.execute("select id from login_customers where username='{}' and 	 		  	    password='{}'".format(uname,pwd))
+                data3=cur.fetchall()
+                global ID
+                for i in data3:
+                   for j in i:
+                       ID=j
+                global passw
+                passw=''
+                passw=pwd
+                print("="*125)
+                dashboard_customers()
+                break
+            else:
+                print("\nWrong Credentials")
+                print("Forgot Password? Want to Reset it?\n")
+                reset_pwd=str(input("Enter Yes(Y) or No(N)"))
+                if reset_pwd.lower()=="y":
+                    sender='projectscorpion21@gmail.com'
+                    receiver=[uname]
+                    password="csprojectnewnew"
+                    rand_pwd=""
+                    string1="abcdefghijklmnopqrstruvwxyz1234567890"
+                    for i in range(0,10):
+                        j=randint(0,36)
+                        rand_pwd+=string1[j]
+                    msg="Hey there Flyer!\nWe just received a request to change your password. Your 		        new Password is "+rand_pwd+".\n\nYou can use this Password to change it to a new 	        one from your Dashboard.\nIf you did not request a password change, you can safely 	        ignore this e-mail.\n\nCheers!\nThe Aerochique Team\n\n\nThis is a computer 	    	        generated message."
+                    server=smtplib.SMTP('smtp.gmail.com',587)
+                    server.starttls()
+                    server.login(sender,password)
+                    server.sendmail(sender, receiver, msg)
+                    cur.execute("update login_customers set password = '{}' where Username = 	              	        '{}'".format(rand_pwd,uname))
+                    con.commit()
+                    print("\nA Mail has been successfully sent to your Registered Mail ID, if it exists.\n")
+                elif reset_pwd.lower()=="n":
+                    continue
+                else:
+                    print("Wrong Input!")
+        elif choice==2:
+            uname=str(input("Enter Mail ID with which you want to make the account: "))
+            pwd=getpass.getpass("Enter Password: ")
+            global uname_test
+            uname_test=uname
+            pwd_confirm=getpass.getpass("Reenter Password: ")
+            if pwd==pwd_confirm:
+                print("\nYour Username will be",uname,"and your password will be",pwd,". Are you 
+
+	    sure you want to continue?")
+                cur=con.cursor()
+                confirm=str(input("Enter Yes(Y) or No(N): "))
+                cur.execute("select * from login_customers")
+                data=cur.fetchall()
+                n71=randint(10000,99999)
+                r=uname[0:4]+str(n71)
+                f=0
+                if confirm.lower()=="y":
+                    if (uname,pwd) in data:
+                        print("\nAccount already exists!\n")
+                    else:
+                        print("\nThis is your Unique ID for your flyer miles reward.",r)
+                        cur.execute("insert into login_customers
+		values('{}','{}','{}',{})".format(uname,pwd,r,f))
+                        con.commit()
+                        print("\nYour Account has been successfully created. You may now login to view 		your Dashboard.\n")
+                elif confirm.lower()=="n":
+                    continue
+                else:
+                    print("\nInvalid Input!\n")
+        elif choice ==3:
+            uname = str(input("Enter Username: "))
+            pwd = getpass.getpass("Enter Password: ")
+            cur=con.cursor()
+            cur.execute("select * from login_staff")
+            data = cur.fetchall()
+            if (uname,pwd) in data:
+                print("\nYou have successfully logged in!\n")
+                print("="*125)
+                dashboard_staff()
+                break
+            else:
+                print("\nWrong Credentials!")
+                print("Forgot Password? Please contact Administrator.\n")
+        elif choice==4:
+            im = PIL.Image.open(r"C:\Users\ajayb\Desktop\Python\PROJECT Airlines\aero chique.png")
+            im.show()
+        elif choice==0:
+            print("="*125)
+            break
+        else:
+            print("\nInvalid Choice Entered.\n")
+def manual1():
+    n=int(input("Enter the number of flights to be entered: "))
+    j=open("notes.dat","wb")
+    d={}
+    u={}
+    for l in range(1,n+1):
+
+        r=input("Enter route: ")
+        p=input("Enter price(ex Rs 13000): ")
+        da=input("Enter date: ")
+        de=input("Enter departure time: ")
+        s=input("Enter status of flight: ")
+        d={"route":r,"price":p,"date":da,"departure":de,"status":s}
+        print("\nRecord stored!\n")
+        u[l]=d
+    pickle.dump(u,j)
+    j.close()
+def manual2():
+    n2=int(input("Enter the number of flights to be entered: "))
+    j2=open("student.dat","wb")
+    d2={}
+    u2={}
+    for l in range(1,n2+1):
+        r=input("Enter route: ")
+        da=input("Enter date OF arrival: ")
+        de=input("Enter time of arrival: ")
+        s=input("Enter status of flight: ")
+        d2={"route":r,"date":da,"arriving":de,"status":s}
+        u2[l]=d2
+        print("\nRecord stored!\n")
+    pickle.dump(u2,j2)
+    j2.close()
+    
+def remove():
+    l=open("notes.dat","rb")
+    d=pickle.load(l)
+    for i in d.keys():
+        print(i,"route",d[i]["route"],"date",d[i]["date"])
+    n=int(input("Enter the number of the flight to be removed: "))
+    d.pop(n,"Please enter the correct Flight Number.")
+    r={}
+    r2=0
+    for i in d.values():
+        r2+=1
+    ri=[]
+    for i in d.values():
+        ri.append(i)
+    for i in range(0,r2):
+        r[i+1]=ri[i]
+    l.close()
+    y=open("notes.dat","wb")
+    pickle.dump(r,y)
+    y.close()
+    if d==r:
+        print("\nPlease enter the correct Flight Number.\n")
+    else:
+        print("\nRecord deleted!\n")
+def adding():
+
+    l=open("notes.dat","rb")
+    d=pickle.load(l)
+    r2=0
+    for i in d.values():
+        r2+=1
+    n=int(input("Enter the number of records to be entered: "))
+    for i in range(1,n+1):
+        r=input("Enter route: ")
+        p=input("Enter price(ex Rs 13000): ")
+        da=input("Enter date: ")
+        de=input("Enter departure time: ")
+        s=input("Enter status of flight: ")
+        king={"route":r,"price":p,"date":da,"departure":de,"status":s}
+        d[r2+i]=king
+        print("\nRecord stored!\n")
+    l.close()
+    y=open("notes.dat","wb")
+    pickle.dump(d,y)
+    y.close()
+def editing():
+    l=open("notes.dat","rb")
+    d=pickle.load(l)
+    for i in d.keys():
+        print(i,"route",d[i]["route"],"date",d[i]["date"])
+    n=int(input("Enter the number of the flight to be edited: "))
+    r=input("Enter route: ")
+    p=input("Enter price(ex Rs 13000): ")
+    da=input("Enter date: ")
+    de=input("Enter departure time: ")
+    s=input("Enter status of flight: ")
+    king={"route":r,"price":p,"date":da,"departure":de,"status":s}
+    d[n]=king
+    l.close()
+    y=open("notes.dat","wb")
+    pickle.dump(d,y)
+    y.close()
+def remove2():
+    l=open("student.dat","rb")
+    d=pickle.load(l)
+    for i in d.keys():
+        print(i,"route",d[i]["route"],"date",d[i]["date"])
+    n=int(input("Enter the number of the flight to be removed: "))
+    d.pop(n,"Please enter the correct Flight Number.")
+    r={}
+    r2=0
+    for i in d.values():
+        r2+=1
+    ri=[]
+    for i in d.values():
+        ri.append(i)
+    for i in range(0,r2):
+
+        r[i+1]=ri[i]
+    l.close()
+    y=open("student.dat","wb")
+    pickle.dump(r,y)
+    y.close()
+    if d==r:
+        print("\nPlease enter the correct Flight Number.\n")
+    else:
+        print("\nRecord deleted!\n")
+def adding2():
+    l=open("student.dat","rb")
+    d=pickle.load(l)
+    r2=0
+    for i in d.values():
+        r2+=1
+    n=int(input("Enter the number of records to be entered: "))
+    for i in range(1,n+1):
+        r=input("Enter route: ")
+        da=input("Enter date: ")
+        de=input("Enter arriving time: ")
+        s=input("Enter status of flight: ")
+        king={"route":r,"date":da,"departure":de,"status":s}
+        d[r2+i]=king	
+        print("\nRecord stored!\n")
+    l.close()
+    y=open("student.dat","wb")
+    pickle.dump(d,y)
+    y.close()
+def editing2():
+    l=open("student.dat","rb")
+    d=pickle.load(l)
+    for i in d.keys():
+        print(i,"route",d[i]["route"],"date",d[i]["date"])
+    n=int(input("Enter the number corresponding to the flight to be deleted: "))
+    r=input("Enter route: ")
+    da=input("Enter date: ")
+    de=input("Enter arriving time: ")
+    s=input("Enter status of flight: ")
+    king={"route":r,"date":da,"departure":de,"status":s}
+    d[n]=king
+    l.close()
+    y=open("notes.dat","wb")
+    pickle.dump(d,y)
+    y.close()
+def history():
+    h=open("history.dat","wb")
+    d=[["test1","test2","test1233",["New Delhi to Jaipur","14 August 2020","12:34","Rs 1233"]]]
+    pickle.dump(d,h)
+    h.close()
+menu() 
